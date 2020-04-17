@@ -11,7 +11,7 @@ const serializeNote = note_table => ({
   name: xss(note_table.name),
   modified: note_table.modified,
   content: xss(note_table.content),
-  folderId: note_table.folderId
+  folderId: note_table.folder_id
 });
 
 noteRouter
@@ -19,6 +19,7 @@ noteRouter
   .get((req, res, next) => {
     const knexInstance = req.app.get('db');
     NoteService.getNote(knexInstance).then(note_table => {
+      console.log(note_table);
       res.json(note_table.map(serializeNote));
     });
   })
@@ -36,11 +37,11 @@ noteRouter
         });
 
     NoteService.addNote(knexInstance, newNote)
-      .then(note_table => {
+      .then(note => {
         res
           .status(201)
-          .location(path.posix.join(req.originalUrl + `/${note_table.id}`))
-          .json(serializeNote(newNote));
+          .location(path.posix.join(req.originalUrl + `/${note.id}`))
+          .json(serializeNote(note));
       })
       .catch(next);
   });
@@ -49,7 +50,7 @@ noteRouter
   .route('/:note_id')
   .all((req, res, next) => {
     const knexInstance = req.app.get('db');
-    NoteService.getById(knexInstance, req.params.note_id)
+    NoteService.getNotebyId(knexInstance, req.params.note_id)
       .then(note_table => {
         if (!note_table) {
           return res.status(404).json({
