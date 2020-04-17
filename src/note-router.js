@@ -1,25 +1,25 @@
 const path = require('path');
 const express = require('express');
 const xss = require('xss');
-const NotesService = require('./notes-service');
+const NoteService = require('./note-service');
 
-const notesRouter = express.Router();
+const noteRouter = express.Router();
 const jsonParser = express.json();
 
-const serializeNote = note => ({
-  id: note.id,
-  name: xss(note.name),
-  modified: note.modified,
-  content: xss(note.content),
-  folder_id: note.folder_id
+const serializeNote = note_table => ({
+  id: note_table.id,
+  name: xss(note_table.name),
+  modified: note_table.modified,
+  content: xss(note_table.content),
+  folder_id: note_table.folder_id
 });
 
-notesRouter
+noteRouter
   .route('/')
   .get((req, res, next) => {
     const knexInstance = req.app.get('db');
-    NotesService.getAllNotes(knexInstance).then(notes => {
-      res.json(notes.map(serializeNote));
+    NoteService.getAllNotes(knexInstance).then(note_table => {
+      res.json(note_table.map(serializeNote));
     });
   })
   .post(jsonParser, (req, res, next) => {
@@ -35,40 +35,40 @@ notesRouter
           }
         });
 
-    NotesService.insertNote(knexInstance, newNote)
-      .then(note => {
+    NoteService.insertNote(knexInstance, newNote)
+      .then(note_table => {
         res
           .status(201)
-          .location(path.posix.join(req.originalUrl + `/${note.id}`))
+          .location(path.posix.join(req.originalUrl + `/${note_table.id}`))
           .json(serializeNote(note));
       })
       .catch(next);
   });
 
-notesRouter
+noteRouter
   .route('/:note_id')
   .all((req, res, next) => {
     const knexInstance = req.app.get('db');
-    NotesService.getById(knexInstance, req.params.note_id)
-      .then(note => {
-        if (!note) {
+    NoteService.getById(knexInstance, req.params.note_id)
+      .then(note_table => {
+        if (!note_table) {
           return res.status(404).json({
             error: {
               message: `Note doesn't exist`
             }
           });
         }
-        res.note = note;
+        res.note_table = note_table;
         next();
       })
       .catch(next);
   })
   .get((req, res, next) => {
-    res.json(serializeNote(res.note));
+    res.json(serializeNote(res.note_table));
   })
   .delete((req, res, next) => {
     const knexInstance = req.app.get('db');
-    NotesService.deleteNote(knexInstance, req.params.note_id)
+    NoteService.deleteNote(knexInstance, req.params.note_id)
       .then(() => {
         res.status(204).end();
       })
@@ -88,11 +88,11 @@ notesRouter
       });
     }
 
-    NotesService.updateNote(knexInstance, req.params.note_id, updatedNote)
+    NoteService.updateNote(knexInstance, req.params.note_id, updatedNote)
       .then(numRowsAffected => {
         res.status(204).end();
       })
       .catch(next);
   });
 
-module.exports = notesRouter;
+module.exports = noteRouter;

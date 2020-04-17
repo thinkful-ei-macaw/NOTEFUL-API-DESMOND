@@ -15,9 +15,17 @@ app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
 
+const endpoints= {
+  folderRouter,noteRouter
+};
+
+Object.keys(endpoints).forEach(route=>{
+  app.use(route, endpoints[route]);
+});
+
 app.get('/', (req,res)=> {
-    res.send('Hello, world!')
-})
+    res.status(200).json({endpoints: Object.keys(endpoints)})
+});
 
 app.use(function errorHandler(error, req, res, next) {
  let response
