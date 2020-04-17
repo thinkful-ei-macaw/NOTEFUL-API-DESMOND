@@ -1,6 +1,6 @@
 const NoteService={
 getNote(knex){
-    return knex.select('*').from(folder_table)
+    return knex.select('*').from('note_table')
 },
 
 getNotebyId(knex, id){
@@ -11,10 +11,10 @@ getNotebyId(knex, id){
     .first()
 },
 
-addNote(knex,id){
+addNote(knex,newNote){
     return knex
     .into('note_table')
-    .insert(note)
+    .insert(newNote)
     .returning('*')
     .then(rows => rows[0])
 },

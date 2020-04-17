@@ -11,21 +11,21 @@ const serializeNote = note_table => ({
   name: xss(note_table.name),
   modified: note_table.modified,
   content: xss(note_table.content),
-  folder_id: note_table.folder_id
+  folderId: note_table.folderId
 });
 
 noteRouter
   .route('/')
   .get((req, res, next) => {
     const knexInstance = req.app.get('db');
-    NoteService.getAllNotes(knexInstance).then(note_table => {
+    NoteService.getNote(knexInstance).then(note_table => {
       res.json(note_table.map(serializeNote));
     });
   })
   .post(jsonParser, (req, res, next) => {
     const knexInstance = req.app.get('db');
-    const { name, content, folder_id } = req.body;
-    const newNote = { name, content, folder_id };
+    const { name, content, folderId } = req.body;
+    const newNote = { name, content, folder_id:folderId };
 
     for (const [key, value] of Object.entries(newNote))
       if (value == null)
@@ -35,12 +35,12 @@ noteRouter
           }
         });
 
-    NoteService.insertNote(knexInstance, newNote)
+    NoteService.addNote(knexInstance, newNote)
       .then(note_table => {
         res
           .status(201)
           .location(path.posix.join(req.originalUrl + `/${note_table.id}`))
-          .json(serializeNote(note));
+          .json(serializeNote(newNote));
       })
       .catch(next);
   });
@@ -76,14 +76,14 @@ noteRouter
   })
   .patch(jsonParser, (req, res, next) => {
     const knexInstance = req.app.get('db');
-    const { name, content, folder_id } = req.body;
-    const updatedNote = { name, content, folder_id };
+    const { name, content, folderId } = req.body;
+    const updatedNote = { name, content, folderId };
 
     const numberOfValues = Object.values(updatedNote).filter(Boolean).length;
     if (numberOfValues === 0) {
       return res.status(400).json({
         error: {
-          message: `Request body must contain 'name', 'content' or 'folder_id'`
+          message: `Request body must contain 'name', 'content' or 'folderId'`
         }
       });
     }

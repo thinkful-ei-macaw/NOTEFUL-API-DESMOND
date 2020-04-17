@@ -1,3 +1,6 @@
+const folderRouter = require('./folder-router');
+const noteRouter = require('./note-router');
+
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
@@ -16,7 +19,8 @@ app.use(helmet());
 app.use(cors());
 
 const endpoints= {
-  folderRouter,noteRouter
+  '/folder_table':folderRouter,
+  '/note_table':noteRouter
 };
 
 Object.keys(endpoints).forEach(route=>{

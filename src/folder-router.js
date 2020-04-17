@@ -6,9 +6,9 @@ const FolderService = require('./folder-service');
 const folderRouter=express.Router();
 const jsonParser=express.json();
 
-const izeFolder = folder => ({
-    id: folder.id,
-    name: xss(folder.name)
+const serializeFolder = folder_table => ({
+    id: folder_table.id,
+    name: xss(folder_table.name)
 });
 
 folderRouter
@@ -37,7 +37,7 @@ folderRouter
       name
     };
 
-    FolderService.insertFolder(knexInstance, newFolder).then(folder_table =>
+    FolderService.addFolder(knexInstance, newFolder).then(folder_table =>
       res
         .status(201)
         .location(path.posix.join(req.originalUrl + `/${folder_table.id}`))
@@ -46,10 +46,10 @@ folderRouter
   });
 
 folderRouter
-  .route('/:folder_id')
+  .route('/:folderId')
   .all((req, res, next) => {
     const knexInstance = req.app.get('db');
-    FolderService.getById(knexInstance, req.params.folder_id)
+    FolderService.getById(knexInstance, req.params.folderId)
       .then(folder => {
         if (!folder) {
           return res.status(404).json({
@@ -67,7 +67,7 @@ folderRouter
     res.json(serializeFolder(res.folder_table));
   })
   .delete((req, res, next) => {
-    FolderService.deleteFolder(req.app.get('db'), req.params.folder_id)
+    FolderService.deleteFolder(req.app.get('db'), req.params.folderId)
       .then(() => {
         res.status(204).end();
       })
@@ -84,7 +84,7 @@ folderRouter
       });
     }
 
-    FolderService.updateFolder(knexInstance, req.params.folder_id, { name })
+    FolderService.updateFolder(knexInstance, req.params.folderId, { name })
       .then(numRowsAffected => {
         res.status(204).end();
       })
